@@ -1,33 +1,34 @@
+const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 
-const server = http.createServer();
+const app = express();
+const server = http.createServer(app);
+
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-  }
+  cors: { origin: "*" }
 });
 
-// When a client connects
+// HEALTH CHECK for Render
+app.get("/", (req, res) => {
+  res.send("Socket server is running.");
+});
+
+// Socket events
 io.on("connection", (socket) => {
   console.log("🔥 Client connected:", socket.id);
 
-  // Listen for messages coming from the iOS app
   socket.on("message", (data) => {
-    console.log("💬 Received message:", data);
-
-    // Send the message back to ALL connected clients (including iOS app)
-    io.emit("message", data);
+    console.log("💬 Received:", data);
+    io.emit("message", data); // broadcast
   });
 
-  // When client disconnects
   socket.on("disconnect", () => {
     console.log("❌ Client disconnected:", socket.id);
   });
 });
 
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => {
-  console.log("🚀 Socket server is running on http://localhost:3000");
+  console.log(🚀 Socket server running on ${PORT});
 });

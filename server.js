@@ -1,35 +1,33 @@
-// server.js
-const express = require("express");
-const app = express();
-const http = require("http").createServer(app);
+const http = require("http");
 const { Server } = require("socket.io");
 
-app.get("/", (req, res) => {
-  res.send("Socket Server Working");
-});
-
-// Allow CORS for your iOS app
-const io = new Server(http, {
+const server = http.createServer();
+const io = new Server(server, {
   cors: {
-    origin: "*", 
-    methods: ["GET", "POST"]
+    origin: "*",
   }
 });
 
+// When a client connects
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+  console.log("🔥 Client connected:", socket.id);
 
-  socket.on("send_message", (data) => {
-    console.log("Message received:", data);
-    io.emit("receive_message", data); // broadcast to everyone
+  // Listen for messages coming from the iOS app
+  socket.on("message", (data) => {
+    console.log("💬 Received message:", data);
+
+    // Send the message back to ALL connected clients (including iOS app)
+    io.emit("message", data);
   });
 
+  // When client disconnects
   socket.on("disconnect", () => {
-    console.log("A user disconnected");
+    console.log("❌ Client disconnected:", socket.id);
   });
 });
 
-const port = process.env.PORT || 3000;
-http.listen(port, () => {
-  console.log("Server running on port:", port);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, () => {
+  console.log("🚀 Socket server is running on http://localhost:3000");
 });
